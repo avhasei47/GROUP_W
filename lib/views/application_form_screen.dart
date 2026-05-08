@@ -46,37 +46,57 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     'SOE316C',
   ];
 
-  void _submitApplication() {
-    if (_formKey.currentState!.validate()) {
-      if (!_confirmedEligibility) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'You must confirm that you meet the minimum requirements.',
-            ),
-          ),
-        );
-        return;
-      }
-
-      final newApplication = StudentApplication(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        studentName: _studentNameController.text.trim(),
-        yearOfStudy: _yearOfStudy!,
-        firstAcademicLevel: _firstAcademicLevel!,
-        firstModule: _firstModule!,
-        secondAcademicLevel: _applyForSecondModule
-            ? _secondAcademicLevel
-            : null,
-        secondModule: _applyForSecondModule ? _secondModule : null,
-        confirmedEligibility: true,
-        status: 'Pending',
-      );
-
-      context.read<ApplicationViewModel>().createApplication(newApplication);
-
-      Navigator.pop(context);
+  Future<void> _submitApplication() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
+
+    if (!_confirmedEligibility) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'You must confirm that you meet the minimum requirements.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final newApplication = StudentApplication(
+      userId: '',
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      studentName: _studentNameController.text.trim(),
+      yearOfStudy: _yearOfStudy!,
+      firstAcademicLevel: _firstAcademicLevel!,
+      firstModule: _firstModule!,
+      secondAcademicLevel: _applyForSecondModule ? _secondAcademicLevel : null,
+      secondModule: _applyForSecondModule ? _secondModule : null,
+      confirmedEligibility: true,
+      status: 'Pending',
+    );
+
+    await context.read<ApplicationViewModel>().createApplication(newApplication);
+
+    if (!mounted) return;
+
+    final errorMessage = context.read<ApplicationViewModel>().errorMessage;
+
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Application submitted successfully.'),
+      ),
+    );
+
+    Navigator.pop(context);
   }
 
   @override
@@ -138,7 +158,9 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 16),
+
                   _SectionCard(
                     icon: Icons.person,
                     title: '1. Student Details',
@@ -151,18 +173,20 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                           prefixIcon: Icon(Icons.person),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
+                          if (value == null || value.trim().isEmpty) {
                             return 'Student name is required';
                           }
 
-                          if (value.length < 3) {
+                          if (value.trim().length < 3) {
                             return 'Name is too short';
                           }
 
                           return null;
                         },
                       ),
+
                       const SizedBox(height: 16),
+
                       DropdownButtonFormField<String>(
                         initialValue: _yearOfStudy,
                         decoration: const InputDecoration(
@@ -190,6 +214,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ),
                     ],
                   ),
+
                   _SectionCard(
                     icon: Icons.menu_book,
                     title: '2. First Module Application',
@@ -219,7 +244,9 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                           return null;
                         },
                       ),
+
                       const SizedBox(height: 16),
+
                       DropdownButtonFormField<String>(
                         initialValue: _firstModule,
                         decoration: const InputDecoration(
@@ -247,6 +274,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ),
                     ],
                   ),
+
                   _SectionCard(
                     icon: Icons.add_task,
                     title: '3. Second Module Application',
@@ -269,8 +297,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                           });
                         },
                       ),
+
                       if (_applyForSecondModule) ...[
                         const SizedBox(height: 12),
+
                         DropdownButtonFormField<String>(
                           initialValue: _secondAcademicLevel,
                           decoration: const InputDecoration(
@@ -296,7 +326,9 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                             return null;
                           },
                         ),
+
                         const SizedBox(height: 16),
+
                         DropdownButtonFormField<String>(
                           initialValue: _secondModule,
                           decoration: const InputDecoration(
@@ -331,6 +363,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ],
                     ],
                   ),
+
                   _SectionCard(
                     icon: Icons.verified_user,
                     title: '4. Eligibility Confirmation',
@@ -351,6 +384,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ),
                     ],
                   ),
+
                   _SectionCard(
                     icon: Icons.upload_file,
                     title: '5. Supporting Documentation',
@@ -382,12 +416,33 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 14),
-                  ElevatedButton.icon(
-                    onPressed: _submitApplication,
-                    icon: const Icon(Icons.send),
-                    label: const Text('Submit Application'),
+
+                  Consumer<ApplicationViewModel>(
+                    builder: (context, applicationVM, child) {
+                      return ElevatedButton.icon(
+                        onPressed:
+                            applicationVM.isLoading ? null : _submitApplication,
+                        icon: applicationVM.isLoading
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.send),
+                        label: Text(
+                          applicationVM.isLoading
+                              ? 'Submitting...'
+                              : 'Submit Application',
+                        ),
+                      );
+                    },
                   ),
+
                   const SizedBox(height: 20),
                 ],
               ),
@@ -428,7 +483,9 @@ class _SectionCard extends StatelessWidget {
                   ),
                   child: Icon(icon, color: AppColors.primary),
                 ),
+
                 const SizedBox(width: 12),
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,6 +494,7 @@ class _SectionCard extends StatelessWidget {
                         title,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
+
                       if (subtitle != null) ...[
                         const SizedBox(height: 4),
                         Text(
@@ -449,7 +507,9 @@ class _SectionCard extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 18),
+
             ...children,
           ],
         ),
@@ -485,13 +545,17 @@ class _BlockedApplicationState extends StatelessWidget {
                     size: 36,
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
                 Text(
                   'Application already submitted',
                   style: Theme.of(context).textTheme.titleLarge,
                   textAlign: TextAlign.center,
                 ),
+
                 const SizedBox(height: 8),
+
                 Text(
                   'Only one application is allowed per student.',
                   textAlign: TextAlign.center,

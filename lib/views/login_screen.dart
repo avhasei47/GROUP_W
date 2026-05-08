@@ -36,9 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (role == 'student') {
         Navigator.pushReplacementNamed(context, RouteManager.studentHome);
       } else if (role == 'admin') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Admin portal will be built next.')),
-        );
+        Navigator.pushReplacementNamed(context, RouteManager.adminDashboard);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

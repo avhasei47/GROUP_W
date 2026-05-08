@@ -37,6 +37,27 @@ class ApplicationService {
         .eq('id', applicationId)
         .eq('user_id', currentUserId);
   }
+
+  Future<List<StudentApplication>> getAllApplications() async {
+    final response = await SupabaseConfig.client
+        .from('applications')
+        .select()
+        .order('created_at', ascending: false);
+
+    return (response as List)
+        .map((item) => StudentApplication.fromMap(item))
+        .toList();
+  }
+
+  Future<void> updateApplicationStatus({
+    required String applicationId,
+    required String status,
+  }) async {
+    await SupabaseConfig.client
+        .from('applications')
+        .update({'status': status})
+        .eq('id', applicationId);
+  }
 }
     
 

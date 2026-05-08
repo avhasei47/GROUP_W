@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+
 import '../models/student_application.dart';
+import '../services/application_service.dart';
 
 class ApplicationViewModel extends ChangeNotifier {
-  StudentApplication? _application;
+  final ApplicationService _applicationService = ApplicationService();
 
-  // READ access for screens
+  StudentApplication? _application;
+  bool _isLoading = false;
+  String? _errorMessage;
+
   StudentApplication? get application => _application;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   bool get hasApplication => _application != null;
 
@@ -17,18 +24,43 @@ class ApplicationViewModel extends ChangeNotifier {
   String get status => _application?.status ?? 'No Application';
   String get firstModule => _application?.firstModule ?? '';
 
-  // CREATE operation
-  void createApplication(StudentApplication newApplication) {
-    if (_application != null) {
-      return; // one application only
+  Future<void> fetchMyApplication() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _application = await _applicationService.getMyApplication();
+    } catch (e) {
+      _errorMessage = 'Failed to load application: $e';
     }
 
-    _application = newApplication;
+    _isLoading = false;
     notifyListeners();
   }
 
-  // UPDATE operation
-  void updateApplication({
+  Future<void> createApplication(StudentApplication newApplication) async {
+    if (_application != null) {
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _applicationService.createApplication(newApplication);
+
+      _application = newApplication;
+    } catch (e) {
+      _errorMessage = 'Failed to submit application: $e';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> updateApplication({
     String? studentName,
     String? yearOfStudy,
     String? firstAcademicLevel,
@@ -36,7 +68,7 @@ class ApplicationViewModel extends ChangeNotifier {
     String? secondAcademicLevel,
     String? secondModule,
     bool? confirmedEligibility,
-  }) {
+  }) async {
     if (_application == null) {
       return;
     }
@@ -45,7 +77,7 @@ class ApplicationViewModel extends ChangeNotifier {
       return;
     }
 
-    _application = _application!.copyWith(
+    final updatedApplication = _application!.copyWith(
       studentName: studentName,
       yearOfStudy: yearOfStudy,
       firstAcademicLevel: firstAcademicLevel,
@@ -55,11 +87,23 @@ class ApplicationViewModel extends ChangeNotifier {
       confirmedEligibility: confirmedEligibility,
     );
 
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _applicationService.updateApplication(updatedApplication);
+
+      _application = updatedApplication;
+    } catch (e) {
+      _errorMessage = 'Failed to update application: $e';
+    }
+
+    _isLoading = false;
     notifyListeners();
   }
 
-  // DELETE operation
-  void deleteApplication() {
+  Future<void> deleteApplication() async {
     final application = _application;
 
     if (application == null) {
@@ -70,7 +114,19 @@ class ApplicationViewModel extends ChangeNotifier {
       return;
     }
 
-    _application = null;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _applicationService.deleteApplication(application.id);
+
+      _application = null;
+    } catch (e) {
+      _errorMessage = 'Failed to delete application: $e';
+    }
+
+    _isLoading = false;
     notifyListeners();
   }
 }
