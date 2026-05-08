@@ -50,7 +50,6 @@ class ApplicationViewModel extends ChangeNotifier {
 
     try {
       await _applicationService.createApplication(newApplication);
-
       _application = newApplication;
     } catch (e) {
       _errorMessage = 'Failed to submit application: $e';
@@ -93,7 +92,6 @@ class ApplicationViewModel extends ChangeNotifier {
 
     try {
       await _applicationService.updateApplication(updatedApplication);
-
       _application = updatedApplication;
     } catch (e) {
       _errorMessage = 'Failed to update application: $e';
@@ -120,7 +118,6 @@ class ApplicationViewModel extends ChangeNotifier {
 
     try {
       await _applicationService.deleteApplication(application.id);
-
       _application = null;
     } catch (e) {
       _errorMessage = 'Failed to delete application: $e';

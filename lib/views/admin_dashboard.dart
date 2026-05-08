@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/student_application.dart';
+import '../routes/route_manager.dart';
 import '../viewmodels/admin_viewmodel.dart';
+import '../viewmodels/auth_viewmodel.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -22,6 +24,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
+  Future<void> _logout() async {
+    await context.read<AuthViewModel>().logout();
+
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(
+      context,
+      RouteManager.login,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final adminVM = context.watch<AdminViewModel>();
@@ -36,6 +49,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               context.read<AdminViewModel>().fetchApplications();
             },
             icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
           ),
         ],
       ),
@@ -105,7 +124,6 @@ class ApplicationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Student name
             Text(
               application.studentName,
               style: const TextStyle(
@@ -116,7 +134,6 @@ class ApplicationCard extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // Status badge
             Row(
               children: [
                 const Text(
@@ -148,7 +165,6 @@ class ApplicationCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Application details
             Text('Year of Study: ${application.yearOfStudy}'),
             Text('Academic Level: ${application.firstAcademicLevel}'),
             Text('Module: ${application.firstModule}'),
@@ -159,7 +175,6 @@ class ApplicationCard extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // Eligibility
             Text(
               application.confirmedEligibility
                   ? 'Eligibility confirmed'
@@ -173,7 +188,6 @@ class ApplicationCard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Buttons
             if (application.status == 'Pending')
               Row(
                 children: [
