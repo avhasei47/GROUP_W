@@ -23,7 +23,7 @@ class StudentApplication {
   final bool confirmedEligibility;
   final String status;
 
-  // Constructor
+  // Constructors
   StudentApplication({
     required this.id,
     required this.studentName,
@@ -36,7 +36,7 @@ class StudentApplication {
     required this.status,
   });
 
-  // CopyWith method - creates a new instance with updated values (immutability)
+  // CopyWith method - creates a new instance with updated values (immutability).
   StudentApplication copyWith({
     String? id,
     String? studentName,
@@ -78,7 +78,7 @@ class StudentApplication {
     };
   }
 
-  // Create model from Supabase response map
+  // Create model from Supabase response map.
   factory StudentApplication.fromMap(Map<String, dynamic> map) {
     return StudentApplication(
       id: map['id'] ?? '',
