@@ -1,4 +1,18 @@
+// ============================================
+// TPG316C Group Assignment – Student Assistant App
+// Group: GROUP_W
+// Members:
+// 1. Ramabulana Avhasei – 221007752
+// 2. Jokazi Nothabile –  223060076
+// 3. Lesego Mochai –  222046558
+// 4.  Mdolo Kwanele – 223088602 
+// 5.  Mchunu Precious  – 222078878
+// File: student_application.dart
+// Description: Model class representing a student assistant application.
+// ============================================
+
 class StudentApplication {
+  // Properties - all fields of an application
   final String id;
   final String studentName;
   final String yearOfStudy;
@@ -9,6 +23,7 @@ class StudentApplication {
   final bool confirmedEligibility;
   final String status;
 
+  // Constructor
   StudentApplication({
     required this.id,
     required this.studentName,
@@ -21,6 +36,7 @@ class StudentApplication {
     required this.status,
   });
 
+  // CopyWith method - creates a new instance with updated values (immutability)
   StudentApplication copyWith({
     String? id,
     String? studentName,
@@ -47,6 +63,7 @@ class StudentApplication {
     );
   }
 
+  // Convert model to map for Supabase insert/update
   Map<String, dynamic> toMap(String userId) {
     return {
       'user_id': userId,
@@ -61,6 +78,7 @@ class StudentApplication {
     };
   }
 
+  // Create model from Supabase response map
   factory StudentApplication.fromMap(Map<String, dynamic> map) {
     return StudentApplication(
       id: map['id'] ?? '',
