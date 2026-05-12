@@ -1,3 +1,16 @@
+// ============================================
+// TPG316C Group Assignment – Student Assistant App
+// Group: GROUP_W
+// Members:
+// 1. Ramabulana Avhasei – 221007752
+// 2. Jokazi Nothabile –  223060076
+// 3. Lesego Mochai –  222046558
+// 4.  Mdolo Kwanele – 223088602 
+// 5.  Mchunu Precious  – 222078878
+// File: student_home_screen.dart
+// Description: Student dashboard - displays application status and allows navigation.
+// ============================================
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
