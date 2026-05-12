@@ -16,27 +16,50 @@ import 'package:flutter/material.dart';
 import '../models/student_application.dart';
 import '../services/application_service.dart';
 
+// Manages the student's own application state (create, read, update, delete).
+//
+// Follows MVVM pattern with Provider. This ViewModel is responsible for:
+// - Fetching the student's existing application (if any)
+// - Submitting a new application (only one per student)
+// - Updating a pending application
+// - Deleting a pending application
+// - Exposing computed properties like `canEditOrDelete` based on application status
 class ApplicationViewModel extends ChangeNotifier {
   final ApplicationService _applicationService = ApplicationService();
 
+  // The student's current application, or `null` if none exists
   StudentApplication? _application;
+  
+  // Indicates whether a network operation (fetch, create, update, delete) is in progress
   bool _isLoading = false;
+  
+  // Stores an error message from the last failed operation; otherwise `null`
   String? _errorMessage;
 
+  
+  // The current application read‑only for the UI
   StudentApplication? get application => _application;
+  // Whether a background operation is active (used to show a loading indicator)
   bool get isLoading => _isLoading;
+  // The most recent error message, or `null` if no error occurred
   String? get errorMessage => _errorMessage;
 
+  // Returns `true` if the student has already submitted an application
   bool get hasApplication => _application != null;
 
+  // Returns `true` if the application exists and is still 'Pending'
   bool get canEditOrDelete {
     return _application != null && _application!.status == 'Pending';
   }
 
+  // The student's name (empty string if no application)
   String get studentName => _application?.studentName ?? '';
+  // The current status of the application (e.g., 'Pending', 'Approved', 'Rejected')
   String get status => _application?.status ?? 'No Application';
+  // The name of the first module the student applied for
   String get firstModule => _application?.firstModule ?? '';
 
+  // Fetches the logged‑in student's application from Supabase
   Future<void> fetchMyApplication() async {
     _isLoading = true;
     _errorMessage = null;
@@ -52,6 +75,7 @@ class ApplicationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Submits a new student assistant application
   Future<void> createApplication(StudentApplication newApplication) async {
     if (_application != null) {
       return;
@@ -72,6 +96,12 @@ class ApplicationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Updates an existing application, but only if its status is 'Pending'.
+  //
+  // All parameters are optional; only provided fields will be updated.
+  // The method creates an updated copy of the application and persists it
+  // via the service layer. If the update succeeds, the local copy is replaced.
+  //
   Future<void> updateApplication({
     String? studentName,
     String? yearOfStudy,
@@ -114,6 +144,10 @@ class ApplicationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Deletes the student's application, but only if its status is 'Pending'.
+  //
+  // After a successful deletion, `_application` is set to `null` and the UI
+  // reflects that no application exists
   Future<void> deleteApplication() async {
     final application = _application;
 
