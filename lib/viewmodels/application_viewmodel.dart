@@ -7,8 +7,8 @@
 // 3. Lesego Mochai –  222046558
 // 4.  Mdolo Kwanele – 223088602 
 // 5.  Mchunu Precious  – 222078878
-// File: auth_viewmodel.dart
-// Description: ViewModel for authentication - handles login, logout, user state.
+// File: application_viewmodel.dart
+// Description: ViewModel for managing student applications - create, read, update, delete.
 // ============================================
 
 import 'package:flutter/material.dart';
