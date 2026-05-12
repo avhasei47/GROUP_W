@@ -110,7 +110,9 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     final hasApplication = context.watch<ApplicationViewModel>().hasApplication;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Application Form')),
+      appBar: AppBar(
+        title: const Text('Application Form'),
+      ),
       body: hasApplication
           ? const _BlockedApplicationState()
           : Form(
@@ -407,8 +409,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Supporting document upload will be added later using Supabase Storage or File Picker.',
-                                style: TextStyle(color: AppColors.textGrey),
+                                'Supporting document upload is planned as a future improvement using Supabase Storage.',
+                                style: TextStyle(
+                                  color: AppColors.textGrey,
+                                ),
                               ),
                             ),
                           ],
