@@ -18,21 +18,24 @@ import '../routes/route_manager.dart';
 import '../theme/app_colors.dart';
 import '../viewmodels/application_viewmodel.dart';
 
+// Screen that shows the full details of a single application
 class ApplicationDetailScreen extends StatelessWidget {
   const ApplicationDetailScreen({super.key});
-
+  
+// Returns a color based on the application status
   Color _statusColor(String status) {
     switch (status) {
       case 'Approved':
-        return AppColors.success;
+        return AppColors.success;  // Green for approved
       case 'Rejected':
-        return AppColors.danger;
+        return AppColors.danger;  // Red for rejected
       case 'Pending':
       default:
-        return AppColors.warning;
+        return AppColors.warning;  // Orange for pending
     }
   }
 
+  // Shows a popup to ask user if they really want to delete
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -43,17 +46,19 @@ class ApplicationDetailScreen extends StatelessWidget {
             'Are you sure you want to delete this application?',
           ),
           actions: [
+            // Cancel button - closes popup without deleting
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel'),
             ),
+            // Delete button - actually deletes the application
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.danger,
                 minimumSize: const Size(120, 46),
               ),
               onPressed: () {
-                context.read<ApplicationViewModel>().deleteApplication();
+                context.read<ApplicationViewModel>().deleteApplication();   // Call delete function
                 Navigator.pop(dialogContext);
                 Navigator.pop(context);
               },
@@ -67,8 +72,10 @@ class ApplicationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get the application data from the view model
     final application = context.watch<ApplicationViewModel>().application;
 
+    // If no application exists, show empty state screen
     if (application == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Application Details')),
@@ -76,6 +83,7 @@ class ApplicationDetailScreen extends StatelessWidget {
       );
     }
 
+    // User can edit/delete only if status is 'Pending'
     final canManage = application.status == 'Pending';
     final statusColor = _statusColor(application.status);
 
@@ -84,6 +92,7 @@ class ApplicationDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Header card with student name and status
           Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
@@ -96,6 +105,7 @@ class ApplicationDetailScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
+                // Icon circle
                 Container(
                   height: 62,
                   width: 62,
@@ -135,6 +145,7 @@ class ApplicationDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+           // Student details card
           _InfoCard(
             icon: Icons.person,
             title: 'Student Details',
@@ -143,6 +154,7 @@ class ApplicationDetailScreen extends StatelessWidget {
               _InfoRow(label: 'Year of Study', value: application.yearOfStudy),
             ],
           ),
+          // First module card
           _InfoCard(
             icon: Icons.menu_book,
             title: 'First Module Application',
@@ -154,6 +166,7 @@ class ApplicationDetailScreen extends StatelessWidget {
               _InfoRow(label: 'Module', value: application.firstModule),
             ],
           ),
+          // Second module card - only shows if a second module exists
           if (application.secondModule != null)
             _InfoCard(
               icon: Icons.library_add,
@@ -169,6 +182,7 @@ class ApplicationDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
+          // Eligibility card
           _InfoCard(
             icon: Icons.verified_user,
             title: 'Eligibility Confirmation',
@@ -180,6 +194,8 @@ class ApplicationDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+
+          // Show edit/delete buttons if status is Pending
           if (canManage) ...[
             ElevatedButton.icon(
               onPressed: () {
@@ -198,6 +214,7 @@ class ApplicationDetailScreen extends StatelessWidget {
               label: const Text('Delete Application'),
             ),
           ] else
+          // Show message if application cannot be changed
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -215,6 +232,7 @@ class ApplicationDetailScreen extends StatelessWidget {
   }
 }
 
+// Reusable card widget that shows information in groups
 class _InfoCard extends StatelessWidget {
   const _InfoCard({
     required this.icon,
@@ -263,6 +281,7 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
+// Reusable row widget that shows a label on left and value on right
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
 
@@ -296,6 +315,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+// Reusable badge widget to show application status
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({
     required this.status,
@@ -327,6 +347,7 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+// Screen shown when there is no application to display
 class _EmptyDetailState extends StatelessWidget {
   const _EmptyDetailState();
 
