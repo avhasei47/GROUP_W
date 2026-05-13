@@ -5,7 +5,7 @@
 // 1. Ramabulana Avhasei – 221007752
 // 2. Jokazi Nothabile –  223060076
 // 3. Lesego Mochai –  222046558
-// 4.  Mdolo Kwanele – 223088602 
+// 4.  Mdolo Kwanele – 223088602
 // 5.  Mchunu Precious  – 222078878
 // File: app_theme.dart
 // Description: Centralised theme configuration for the entire app.
@@ -90,7 +90,7 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 52),
+        minimumSize: const Size(64, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
@@ -98,7 +98,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
-        minimumSize: const Size(double.infinity, 52),
+        minimumSize: const Size(64, 52),
         side: const BorderSide(color: AppColors.primary),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),

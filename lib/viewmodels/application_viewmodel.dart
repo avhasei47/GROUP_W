@@ -5,13 +5,15 @@
 // 1. Ramabulana Avhasei – 221007752
 // 2. Jokazi Nothabile –  223060076
 // 3. Lesego Mochai –  222046558
-// 4.  Mdolo Kwanele – 223088602 
+// 4.  Mdolo Kwanele – 223088602
 // 5.  Mchunu Precious  – 222078878
 // File: application_viewmodel.dart
 // Description: ViewModel for managing student applications - create, read, update, delete.
 // ============================================
 
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:typed_data';
 
 import '../models/student_application.dart';
 import '../services/application_service.dart';
@@ -29,20 +31,26 @@ class ApplicationViewModel extends ChangeNotifier {
 
   // The student's current application, or `null` if none exists
   StudentApplication? _application;
-  
+
   // Indicates whether a network operation (fetch, create, update, delete) is in progress
   bool _isLoading = false;
-  
+  bool _isUploading = false;
+
   // Stores an error message from the last failed operation; otherwise `null`
   String? _errorMessage;
+  String? _uploadError;
 
-  
   // The current application read‑only for the UI
   StudentApplication? get application => _application;
+
   // Whether a background operation is active (used to show a loading indicator)
   bool get isLoading => _isLoading;
+
+  bool get isUploading => _isUploading;
+
   // The most recent error message, or `null` if no error occurred
   String? get errorMessage => _errorMessage;
+  String? get uploadError => _uploadError;
 
   // Returns `true` if the student has already submitted an application
   bool get hasApplication => _application != null;
@@ -54,8 +62,10 @@ class ApplicationViewModel extends ChangeNotifier {
 
   // The student's name (empty string if no application)
   String get studentName => _application?.studentName ?? '';
+
   // The current status of the application (e.g., 'Pending', 'Approved', 'Rejected')
   String get status => _application?.status ?? 'No Application';
+
   // The name of the first module the student applied for
   String get firstModule => _application?.firstModule ?? '';
 
@@ -76,23 +86,37 @@ class ApplicationViewModel extends ChangeNotifier {
   }
 
   // Submits a new student assistant application
-  Future<void> createApplication(StudentApplication newApplication) async {
+  Future<void> createApplication(
+    StudentApplication newApplication, {
+    File? documentFile,
+    Uint8List? documentBytes,
+    String? filename,
+  }) async {
     if (_application != null) {
       return;
     }
 
     _isLoading = true;
+    _isUploading = documentFile != null || documentBytes != null;
     _errorMessage = null;
+    _uploadError = null;
     notifyListeners();
 
     try {
-      await _applicationService.createApplication(newApplication);
+      await _applicationService.createApplication(
+        newApplication,
+        documentFile,
+        documentBytes: documentBytes,
+        filename: filename,
+      );
       _application = newApplication;
     } catch (e) {
       _errorMessage = 'Failed to submit application: $e';
+      _uploadError = e.toString();
     }
 
     _isLoading = false;
+    _isUploading = false;
     notifyListeners();
   }
 
@@ -174,6 +198,7 @@ class ApplicationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 }
+
 /*I used private model data inside the ViewModel.
 The View accesses the data through public getters.
 The View cannot directly edit the model.

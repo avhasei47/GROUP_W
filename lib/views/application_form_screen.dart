@@ -5,7 +5,7 @@
 // 1. Ramabulana Avhasei – 221007752
 // 2. Jokazi Nothabile –  223060076
 // 3. Lesego Mochai –  222046558
-// 4.  Mdolo Kwanele – 223088602 
+// 4.  Mdolo Kwanele – 223088602
 // 5.  Mchunu Precious  – 222078878
 // File: application_form_screen.dart
 // Description: Application form screen - allows students to submit a new application.
@@ -14,6 +14,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as path;
 
 import '../models/student_application.dart';
 import '../theme/app_colors.dart';
@@ -39,6 +44,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
 
   bool _applyForSecondModule = false;
   bool _confirmedEligibility = false;
+  File? _selectedDocument;
+  Uint8List? _selectedDocumentBytes;
+  String? _selectedDocumentName;
+  bool _isPickingDocument = false;
 
   final List<String> _yearsOfStudy = [
     'First Year',
@@ -89,28 +98,140 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
       status: 'Pending',
     );
 
-    await context.read<ApplicationViewModel>().createApplication(newApplication);
+    // Inform user if no file selected (submission will still proceed)
+    if (_selectedDocument == null && _selectedDocumentBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No file selected — submission will proceed without a supporting document.',
+          ),
+        ),
+      );
+    }
+
+    await context.read<ApplicationViewModel>().createApplication(
+      newApplication,
+      documentFile: _selectedDocument,
+      documentBytes: _selectedDocumentBytes,
+      filename: _selectedDocumentName,
+    );
 
     if (!mounted) return;
 
-    final errorMessage = context.read<ApplicationViewModel>().errorMessage;
+    final appVM = context.read<ApplicationViewModel>();
+    final errorMessage = appVM.errorMessage;
+    final uploadError = appVM.uploadError;
 
-    if (errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-        ),
-      );
+    String? userMessage;
+
+    if (uploadError != null) {
+      final msg = uploadError.toLowerCase();
+      if (msg.contains('file') && msg.contains('large')) {
+        userMessage =
+            'Upload failed: file is too large. Please choose a smaller file.';
+      } else if (msg.contains('unsupported') || msg.contains('file type')) {
+        userMessage = 'Upload failed: unsupported file type.';
+      } else if (msg.contains('bucket not found') ||
+          msg.contains('bucket') && msg.contains('not found') ||
+          msg.contains('404')) {
+        userMessage =
+            'Upload failed: Supabase bucket "supporting-document" was not found. Create the bucket or update the bucket name in the app.';
+      } else if (msg.contains('row-level security') ||
+          msg.contains('violates row-level security') ||
+          msg.contains('unauthorized') ||
+          msg.contains('403') ||
+          msg.contains('401')) {
+        userMessage =
+            'Upload failed: Supabase Storage policy blocked this user. Check the bucket RLS insert policy.';
+      } else if (msg.contains('network') || msg.contains('socket')) {
+        userMessage =
+            'Document upload failed. Please check your internet connection and try again.';
+      } else {
+        userMessage = uploadError;
+      }
+    } else if (errorMessage != null) {
+      userMessage = 'Failed to submit application: $errorMessage';
+    }
+
+    if (userMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userMessage)));
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Application submitted successfully.'),
-      ),
-    );
+    // Success messages
+    if (_selectedDocument != null || _selectedDocumentBytes != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Document uploaded and application saved successfully.',
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Application submitted successfully.')),
+      );
+    }
 
     Navigator.pop(context);
+  }
+
+  Future<void> _pickSupportingDocument() async {
+    setState(() {
+      _isPickingDocument = true;
+    });
+
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+        withData: kIsWeb,
+      );
+
+      if (!mounted || result == null) return;
+
+      final picked = result.files.single;
+
+      if (kIsWeb) {
+        final bytes = picked.bytes;
+        if (bytes == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Could not read the selected file. Please try again.',
+              ),
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          _selectedDocumentBytes = bytes;
+          _selectedDocumentName = picked.name;
+          _selectedDocument = null;
+        });
+      } else if (picked.path != null) {
+        setState(() {
+          _selectedDocument = File(picked.path!);
+          _selectedDocumentBytes = null;
+          _selectedDocumentName = path.basename(picked.path!);
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not choose file: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickingDocument = false;
+        });
+      }
+    }
   }
 
   @override
@@ -124,9 +245,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     final hasApplication = context.watch<ApplicationViewModel>().hasApplication;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Application Form'),
-      ),
+      appBar: AppBar(title: const Text('Application Form')),
       body: hasApplication
           ? const _BlockedApplicationState()
           : Form(
@@ -414,20 +533,57 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                             color: AppColors.secondary.withValues(alpha: 0.18),
                           ),
                         ),
-                        child: const Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.cloud_upload_outlined,
-                              color: AppColors.secondary,
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Supporting document upload is planned as a future improvement using Supabase Storage.',
-                                style: TextStyle(
-                                  color: AppColors.textGrey,
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.cloud_upload_outlined,
+                                  color: AppColors.secondary,
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Attach supporting document (optional):',
+                                    style: TextStyle(color: AppColors.textGrey),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed: _isPickingDocument
+                                      ? null
+                                      : _pickSupportingDocument,
+                                  icon: _isPickingDocument
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.attach_file),
+                                  label: Text(
+                                    _isPickingDocument
+                                        ? 'Choosing...'
+                                        : 'Choose file',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _selectedDocument != null
+                                        ? path.basename(_selectedDocument!.path)
+                                        : (_selectedDocumentName ??
+                                              'No file selected'),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -439,23 +595,27 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
 
                   Consumer<ApplicationViewModel>(
                     builder: (context, applicationVM, child) {
-                      return ElevatedButton.icon(
-                        onPressed:
-                            applicationVM.isLoading ? null : _submitApplication,
-                        icon: applicationVM.isLoading
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.send),
-                        label: Text(
-                          applicationVM.isLoading
-                              ? 'Submitting...'
-                              : 'Submit Application',
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: applicationVM.isLoading
+                              ? null
+                              : _submitApplication,
+                          icon: applicationVM.isLoading
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.send),
+                          label: Text(
+                            applicationVM.isLoading
+                                ? 'Submitting...'
+                                : 'Submit Application',
+                          ),
                         ),
                       );
                     },

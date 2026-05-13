@@ -5,7 +5,7 @@
 // 1. Ramabulana Avhasei – 221007752
 // 2. Jokazi Nothabile –  223060076
 // 3. Lesego Mochai –  222046558
-// 4.  Mdolo Kwanele – 223088602 
+// 4.  Mdolo Kwanele – 223088602
 // 5.  Mchunu Precious  – 222078878
 // File: student_home_screen.dart
 // Description: Student dashboard - displays application status and allows navigation.
@@ -55,10 +55,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(
-      context,
-      RouteManager.login,
-    );
+    Navigator.pushReplacementNamed(context, RouteManager.login);
   }
 
   @override
@@ -84,9 +81,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               : _statusColor(application.status);
 
           if (applicationViewModel.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (applicationViewModel.errorMessage != null) {
@@ -96,9 +91,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 child: Text(
                   applicationViewModel.errorMessage!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.danger,
-                  ),
+                  style: const TextStyle(color: AppColors.danger),
                 ),
               ),
             );
@@ -237,21 +230,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 22),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              await Navigator.pushNamed(
-                                context,
-                                RouteManager.applicationForm,
-                              );
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                await Navigator.pushNamed(
+                                  context,
+                                  RouteManager.applicationForm,
+                                );
 
-                              if (!context.mounted) return;
+                                if (!context.mounted) return;
 
-                              context
-                                  .read<ApplicationViewModel>()
-                                  .fetchMyApplication();
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('Submit Application'),
+                                context
+                                    .read<ApplicationViewModel>()
+                                    .fetchMyApplication();
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Submit Application'),
+                            ),
                           ),
                         ],
                       ),
@@ -296,14 +292,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                 children: [
                                   Text(
                                     application.firstModule,
-                                    style:
-                                        Theme.of(context).textTheme.titleLarge,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge,
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     application.firstAcademicLevel,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                   ),
                                   const SizedBox(height: 10),
                                   _StatusBadge(
@@ -341,10 +339,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({
-    required this.status,
-    required this.color,
-  });
+  const _StatusBadge({required this.status, required this.color});
 
   final String status;
   final Color color;
@@ -352,10 +347,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
